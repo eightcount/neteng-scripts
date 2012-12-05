@@ -6,9 +6,9 @@ import glob, re, os
 
 # Variables
  # path to current configuration files
-path = '/Group/configs'
+path = '/home/pperreault/bin/python/testconfigs'
  # path to configuration updates
-path2 = '/configfiles'
+wr_path = '/home/pperreault/bin/python/configfiles'
 ntp1 = '10.1.1.1'
 ntp2 = '10.2.2.2'
 snmp_com1 = 'foo1'
@@ -18,6 +18,13 @@ snmp_com2 = 'foo2'
 ntp_re = re.compile('ntp server (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 snmp_com_re = re.compile('snmp-server community (\S*)')
 clk_re = re.compile('^clock (summer-time|timezone)')
+spe_re = re.compile('^service password encryption')
+secret_re = re.compile('^enable secret')
+uname_re = re.compile('^username (\S*)')
+#aaa_re
+log_re = re.compile('logging buffered (\D*)')
+http_srv_re = re.compile('^no ip http (\S*)')
+banner_re = re.compile('^banner (\S*)')
 
 def clk_func():
 	# Checks clock configurations
@@ -50,9 +57,41 @@ def ntp_func():
 		else:
 			cnf.write(' no %s\n' % ntp_re.match(line).group(0))
 
+def misc_func():
+	if spe_re.match(line):
+		spe_check = True
+
+def banner_func():
+
+	if banner_re.match(line):
+		if banner_re.match(line).group(1) == 'login':
+			banner_check = True
+		else:
+			cnf.write('no %s\n' % banner_re.match(line))
+
+def banner_wr_func():
+
+	global banner
+	banner = '''banner login ~
+	+---------------------------------------------------------+
+	This computer system (including all hardware, software and
+	peripheral devices) is the property of the 
+	Companies (-Group). Use of this computer system is
+	for management approved purposes. Tower Group reserves the
+	right to monitor the use of the computer system at any time
+	Use of this computer system constitutes consent to such
+	monitoring. Any unauthorized access, use or modification of
+	the computer system can result in disciplinary action, civil
+	liability, or criminal penalties.
+	Please refer to the  Group Information Security Policy
+	for more information.
+	+---------------------------------------------------------+
+	~\n\n\n'''
+	cnf.write(banner)
+	
 def cnf_func():
 	# Writes new configurations to file
-	global ntp1_check, ntp2_check, snmp_com1_check, snmp_com2_check, clk_zone_check, clk_dst_check
+	global ntp1_check, ntp2_check, snmp_com1_check, snmp_com2_check, clk_zone_check, clk_dst_check, banner
 	if not clk_zone_check:
 		cnf.write('clock timezone EST -5\n')
 	if not clk_dst_check:
@@ -63,14 +102,15 @@ def cnf_func():
 		cnf.write('ntp server %s\n' % ntp1)
 	if not ntp2_check:
 		cnf.write('ntp server %s\n' % ntp2)
+	banner_wr_func() 
 
 for filename in glob.glob('%s/*' % path):
 	host = os.path.basename(filename)
 	ntp1_check = ntp2_check = snmp_com1_check = snmp_com2_check = False
-	clk_zone_check = clk_dst_check = False
+	clk_zone_check = clk_dst_check = spe_check = False
 	if os.path.isfile(filename):	
 		f = open(filename, "r")
-		cnf = open('%s/%s' % (path2, host), "w")
+		cnf = open('%s/%s' % (wr_path, host), "w")
        		cnf.write('!%s - configuration file\n' % host)
 		for line in f:
 			clk_func()
