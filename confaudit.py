@@ -6,9 +6,9 @@ import glob, re, os
 
 # Variables
  # path to current configuration files
-path = '/home/pperreault/bin/python/testconfigs'
+path = '/testconfigs'
  # path to configuration updates
-wr_path = '/home/pperreault/bin/python/configfiles'
+wr_path = '/configfiles'
 ntp1 = '10.1.1.1'
 ntp2 = '10.2.2.2'
 snmp_com1 = 'foo1'
